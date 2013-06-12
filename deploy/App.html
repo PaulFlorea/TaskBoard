@@ -121,6 +121,13 @@ function initTaskboard() {
             var stateNames = [];
             for (var i = 0, length = stateOptions.length; i < length; i++) {
                 stateNames.push(stateOptions[i].Value);
+
+                // Extra columns under "In Progress" state
+                if (stateOptions[i].ShortLabel == 'P'){
+                    stateNames.push("To Verify in Dev");
+                    stateNames.push("Move to QA");
+                    stateNames.push("Move to UAT);
+                }
             }
             return stateNames;
         },
