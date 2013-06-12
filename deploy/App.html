@@ -25,6 +25,24 @@
 <script type="text/javascript" src="__SERVER_URL__/js/toolkit/0.02/datasource.js"></script>
 <script type="text/javascript">
 
+//Custom JSON table to handle the new options of our local SuperState,
+//MapsTo points to the option in the remote schema.
+var SubState = {
+    options: [
+        { Label: 'Defined', Value: 'Defined', ShortLabel: 'D', MapsTo: 'D'},
+        { Label: 'In-Progress', Value: 'In-Progress', ShortLabel: 'P', MapsTo: 'P'},
+        { Label: 'To Verify in Dev', Value: 'To Verify in Dev', ShortLabel: 'D', MapsTo: 'P'},
+        { Label: 'Move to QA', Value: 'Move to QA', ShortLabel: 'Q', MapsTo: 'P'},
+        { Label: 'Move to UAT', Value: 'Move to UAT', ShortLabel: 'U', MapsTo: 'P'},
+        { Label: 'Completed', Value : 'Completed', ShortLabel: 'C', MapsTo: 'C'} 
+    ]
+}
+/*
+var subRenderer = function(config) {
+    var super = RALLY.toolkit.renderer.StateRenderer(config)
+    super.states = SubState.options;
+}
+*/
 function initTaskboard() {
 
     RALLY.toolkit.HTML.createMaskLayer();
@@ -117,17 +135,10 @@ function initTaskboard() {
         // configure columns
         columnAttribute: "State",
         columnValuesAccessor: function(model, modelSchema) {
-            var stateOptions = modelSchema.Task.State.options;
+            var stateOptions = SubState.options;
             var stateNames = [];
             for (var i = 0, length = stateOptions.length; i < length; i++) {
                 stateNames.push(stateOptions[i].Value);
-
-                // Extra columns under "In Progress" state
-                if (stateOptions[i].ShortLabel == 'P'){
-                    stateNames.push("To Verify in Dev");
-                    stateNames.push("Move to QA");
-                    stateNames.push("Move to UAT);
-                }
             }
             return stateNames;
         },
