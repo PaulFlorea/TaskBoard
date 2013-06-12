@@ -35,7 +35,7 @@ var SubState = {
     options: [
         { Label: 'Defined', Value: 'Defined', ShortLabel: 'D', MapsTo: 'D'},
         { Label: 'In-Progress', Value: 'In-Progress', ShortLabel: 'P', MapsTo: 'P'},
-        { Label: 'To Verify in Dev', Value: 'To Verify in Dev', ShortLabel: 'D', MapsTo: 'P'},
+        { Label: 'To Verify in Dev', Value: 'To Verify in Dev', ShortLabel: 'V', MapsTo: 'P'},
         { Label: 'Move to QA', Value: 'Move to QA', ShortLabel: 'Q', MapsTo: 'P'},
         { Label: 'Move to UAT', Value: 'Move to UAT', ShortLabel: 'U', MapsTo: 'P'},
         { Label: 'Completed', Value : 'Completed', ShortLabel: 'C', MapsTo: 'C'} 
@@ -51,6 +51,13 @@ var convertState = function (subOption) {
         return SubState.options[1];
     }
     return subOption;
+};
+
+var convertByVal = function (value) {
+    if (value != 'In-Progress' && value != 'Defined' && value != 'Completed'){
+        return SubState.options[1].value;
+    }
+    return value;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +341,7 @@ function initTaskboard() {
                 var anim = new YAHOO.util.ColorAnim(cell, { backgroundColor: { from: '#F5F4CD', to: '#fff' } });
                 anim.animate();
             }
-            gridController.saveChanges(item, { 'State': convertState(value) }, 'taskboard', function() {
+            gridController.saveChanges(item, { 'State': convertByVal(value) }, 'taskboard', function() {
                 setStatus();
             });
         }
