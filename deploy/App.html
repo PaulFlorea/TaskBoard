@@ -25,8 +25,12 @@
 <script type="text/javascript" src="__SERVER_URL__/js/toolkit/0.02/datasource.js"></script>
 <script type="text/javascript">
 
+
+//Custom Table Code Within the Slashes/////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
 //Custom JSON table to handle the new options of our local SuperState,
-//MapsTo points to the option in the remote schema.
+//MapsTo points to the option in the remote table.
 var SubState = {
     options: [
         { Label: 'Defined', Value: 'Defined', ShortLabel: 'D', MapsTo: 'D'},
@@ -37,12 +41,26 @@ var SubState = {
         { Label: 'Completed', Value : 'Completed', ShortLabel: 'C', MapsTo: 'C'} 
     ]
 }
+
+/** Converts the subOption in the local JSON to an object type that can be used
+* @Param: subOption The option in the SubState JSON to be converted
+*/
+var stateConverter = function (subOption) {
+    if (subOption.MapsTo == 'P'){
+        return SubState.options[1];
+    }
+    return subOption;
+};
 /*
 var subRenderer = function(config) {
     var super = RALLY.toolkit.renderer.StateRenderer(config)
     super.states = SubState.options;
-}
-*/
+
+    return super;
+};*/
+///////////////////////////////////////////////////////////////////////////////////////////
+
+
 function initTaskboard() {
 
     RALLY.toolkit.HTML.createMaskLayer();
