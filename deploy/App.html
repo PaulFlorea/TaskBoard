@@ -43,21 +43,16 @@ var SubState = {
 }
 
 /** Converts the subOption in the local JSON to an object type that can be used
-* @Param: subOption The option in the SubState JSON to be converted
+* @param: subOption The option in the SubState JSON to be converted
+* @return: the converted option that can be handled by RALLY's libraries.
 */
-var stateConverter = function (subOption) {
+var convertState = function (subOption) {
     if (subOption.MapsTo == 'P'){
         return SubState.options[1];
     }
     return subOption;
 };
-/*
-var subRenderer = function(config) {
-    var super = RALLY.toolkit.renderer.StateRenderer(config)
-    super.states = SubState.options;
 
-    return super;
-};*/
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -203,10 +198,12 @@ function initTaskboard() {
             html.push('<div class="' + divClass.join(' ') + '" id="' + divId + '">');
 
             state = new RALLY.toolkit.renderer.StateRenderer({
-                schema: schema.State,
+                schema: SubState,
                 state: value.ScheduleState,
                 blocked: value.Blocked
             });
+
+
             html.push('<div class="state">' + state.display(false, value.ScheduleState == 'Accepted') + '</div>');
 
             html.push('<div class="id">' + value.FormattedID + '</div>');
@@ -337,7 +334,7 @@ function initTaskboard() {
                 var anim = new YAHOO.util.ColorAnim(cell, { backgroundColor: { from: '#F5F4CD', to: '#fff' } });
                 anim.animate();
             }
-            gridController.saveChanges(item, { 'State': value }, 'taskboard', function() {
+            gridController.saveChanges(item, { 'State': convertState(value) }, 'taskboard', function() {
                 setStatus();
             });
         }
