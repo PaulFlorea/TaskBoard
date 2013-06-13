@@ -29,7 +29,7 @@
 //Custom Table Code Within the Slashes/////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-//Custom JSON table to handle the new options of our local SuperState,
+//Custom JSON table to handle the new options of our local SubState,
 //MapsTo points to the option in the remote table.
 var SubState = {
     options: [
@@ -46,19 +46,19 @@ var SubState = {
 * @param: subOption The option in the SubState JSON to be converted
 * @return: the converted option that can be handled by RALLY's libraries.
 */
-var convertState = function (subOption) {
+function convertState (subOption) {
     if (subOption.MapsTo == 'P'){
         return SubState.options[1];
     }
     return subOption;
-};
+}
 
-var convertByVal = function (value) {
+function convertByVal (value) {
     if (value != 'In-Progress' && value != 'Defined' && value != 'Completed'){
-        return SubState.options[1].value;
+        return SubState.options[1].Value;
     }
     return value;
-};
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
