@@ -60,6 +60,10 @@ function convertByVal (value) {
     return value;
 }
 
+function isCustomVal (value) {
+    return (value != 'In-Progress' && value != 'Defined' && value != 'Completed');
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -108,9 +112,9 @@ function initTaskboard() {
 
             "users"             : "/users?fetch=displayname,loginname,emailaddress,objectid" + paging,
 
-            "tasks"             : "/tasks?fetch=taskindex,name,objectid,formattedid,owner,blocked,estimate,todo,actuals,state,workproduct&query=(Iteration = ${iteration})" + scoping + paging,
+            "tasks"             : "/tasks?fetch=taskindex,name,objectid,formattedid,owner,blocked,estimate,todo,actuals,state,collectionscustomstate,workproduct&query=(Iteration = ${iteration})" + scoping + paging,
 
-            "stories"           : "/hierarchicalrequirement?fetch=rank,blocked,formattedid,name,objectid,owner,project,schedulestate,taskestimatetotal,taskremainingtotal,taskactualtotal,tasks&order=Rank&query=(Iteration = ${iteration})" + scoping + paging,
+            "stories"           : "/hierarchicalrequirement?fetch=rank,blocked,formattedid,name,objectid,owner,project,schedulestate,collectionsschedulestates,taskestimatetotal,taskremainingtotal,taskactualtotal,tasks&order=Rank&query=(Iteration = ${iteration})" + scoping + paging,
             "defects"           : "/defect?fetch=rank,blocked,formattedid,name,objectid,owner,project,schedulestate,taskestimatetotal,taskremainingtotal,taskactualtotal&order=Rank&query=(Iteration = ${iteration})" + scoping + paging,
             "defectsuite"       : "/defectsuite?fetch=rank,blocked,formattedid,name,objectid,owner,project,schedulestate,taskestimatetotal,taskremainingtotal,taskactualtotal&order=Rank&query=(Iteration = ${iteration})" + scoping + paging,
             "testsets"          : "/testset?fetch=rank,blocked,formattedid,name,objectid,owner,project,schedulestate,taskestimatetotal,taskremainingtotal,taskactualtotal&query=(Iteration = ${iteration})" + scoping + paging
@@ -205,16 +209,35 @@ function initTaskboard() {
             html.push('<div class="' + divClass.join(' ') + '" id="' + divId + '">');
 
             state = new RALLY.toolkit.renderer.StateRenderer({
-                schema: SubState,
-                state: value.ScheduleState,
+                schema: schema.State, //SubState,
+                state: value.ScheduleState,//CollectionsScheduleStates,
                 blocked: value.Blocked
             });
+
+            /*var rendererConfig = {
+                findSelectedIndex: function(selected) {
+                    if (Lang.isValue(selected)) {
+                        for (var i = 0, len = this.states.length; i < len; i++) {
+                            if (this.states[i].Value == selected) {
+                                if (selected == 'In-Progress'){
+                                    for (var j = i, len = this.states.length; i < len; i++) {
+
+                                    }
+                                }
+                                return i;
+                            }
+                        }
+                    }
+                    return -1;
+                },
+            }*/
+
 
 
             html.push('<div class="state">' + state.display(false, value.ScheduleState == 'Accepted') + '</div>');
 
             html.push('<div class="id">' + value.FormattedID + '</div>');
-            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(value.Name, 100) + '</div>');
+            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(value.Name, 100) + value.ScheduleState + '</div>');
             html.push('<div class="' + ownerClass.join(' ') + '">' + owner + '</div>');
 
             html.push(renderTimeCell((schema.TaskEstimateTotal) ? schema.TaskEstimateTotal.DisplayName : 'Est', value.TaskEstimateTotal, timeClass.join(' ')));
@@ -299,7 +322,7 @@ function initTaskboard() {
 
             html.push('<div style="' + contentStyle + '">');
             html.push('<div class="id">' + item.FormattedID + '</div>');
-            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(item.Name) + '</div>');
+            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(item.Name) /*+ item.CollectionsCustomState*/ + '</div>');
             html.push('<div class="' + ownerClass.join(' ') + '">' + owner + '</div>');
 
             html.push('<div class="time">');
@@ -341,9 +364,113 @@ function initTaskboard() {
                 var anim = new YAHOO.util.ColorAnim(cell, { backgroundColor: { from: '#F5F4CD', to: '#fff' } });
                 anim.animate();
             }
-            gridController.saveChanges(item, { 'State': convertByVal(value) }, 'taskboard', function() {
+            //Check for custom column change
+            if (isCustomVal(value)){
+                gridController.saveChanges(item, { 'State': "In-Progress", 'CollectionsCustomState': value }, 'taskboard', function() {
                 setStatus();
-            });
+                });
+            }//Default generated column change
+            else{
+                gridController.saveChanges(item, { 'State': value, 'CollectionsCustomState': "default" }, 'taskboard', function() {
+                    setStatus();
+                });
+            }
+        },
+
+        //Modified to handle the displaying of extra columns
+         refreshItem: function(item) {
+          var i, j, rowKey, rowCount, columnKey, columnCount, cell, cells;
+
+          for (i = 0, rowCount = this.rowHeaderValues.length; i < rowCount; i++) {
+
+            rowKey = this.rowKeyAccessor(this.rowAttribute ? item[this.rowAttribute] : 0);
+            if (rowKey == this.rowKeyAccessor(this.rowHeaderValues[i])) {
+
+              for (j = 0, columnCount = this.columnHeaderValues.length; j < columnCount; j++) {
+
+                if(item.CollectionsCustomState != null && item.CollectionsCustomState != 'default'){
+                    columnValue = item.CollectionsCustomState;
+                }
+                else {
+                    columnValue = this.columnAttribute ? item[this.columnAttribute] : 0;
+                }
+                columnKey = this.columnKeyAccessor(columnValue);
+
+                if (columnKey == this.columnKeyAccessor(this.columnHeaderValues[j])) {
+
+                  // find the cells in the current row
+                  cell = this.getRenderedItem(item);
+                  while (cell.tagName.toUpperCase() != 'TR') {
+                    cell = cell.parentNode;
+                  }
+                  cells = cell.childNodes;
+
+                  this.removeItem(item);
+                  this.cellRenderer(cells[this.rowAttribute ? j + 1 : j], item, columnKey, rowKey);
+                  return;
+                }
+              }
+            }
+          }
+        },
+        //Modified to handle the displaying of extra columns
+        createGridData: function(model) {
+          var items = this.itemsAccessor ? this.itemsAccessor(model) : model;
+          var item, rowValue, rowKey, rowIdentityMap = {},
+            rowValues = [],
+            columnValue, columnKey, columnIdentityMap = {},
+            columnValues = [],
+            cells = {},
+            row, cell;
+          for (var i = 0, length = items.length; i < length; i++) {
+
+            item = items[i];
+
+            rowValue = this.rowAttribute ? item[this.rowAttribute] : 0;
+            rowKey = this.rowKeyAccessor(rowValue);
+            if (!this.rowValuesAccessor && typeof rowIdentityMap[rowKey] == 'undefined') {
+              rowValues.push(rowValue);
+              rowIdentityMap[rowKey] = rowValue;
+            }
+
+            if(item.CollectionsCustomState != null && item.CollectionsCustomState != 'default'){
+                columnValue = item.CollectionsCustomState;
+            }
+            else {
+                columnValue = this.columnAttribute ? item[this.columnAttribute] : 0;
+            }
+            columnKey = this.columnKeyAccessor(columnValue);
+            if (!this.columnValuesAccessor && typeof columnIdentityMap[rowKey] == 'undefined') {
+              columnValues.push(columnValue);
+              columnIdentityMap[columnKey] = columnValue;
+            }
+
+            row = cells[rowKey];
+            if (!row) {
+              row = cells[rowKey] = {};
+            }
+
+            cell = row[columnKey];
+            if (!cell) {
+              cell = row[columnKey] = [];
+            }
+
+            cell.push(item);
+          }
+
+          if (this.rowSortFunction) {
+            rowValues.sort(this.rowSortFunction);
+          }
+
+          if (this.columnSortFunction) {
+            columnValues.sort(this.columnSortFunction);
+          }
+
+          return {
+            rowValues: this.rowValuesAccessor ? this.rowValuesAccessor(model, this.schema) : rowValues,
+            columnValues: this.columnValuesAccessor ? this.columnValuesAccessor(model, this.schema) : columnValues,
+            cells: cells
+          };
         }
     };
 
