@@ -33,12 +33,12 @@
 //MapsTo points to the option in the remote table.
 var SubState = {
     options: [
-        { Label: 'Defined', Value: 'Defined', ShortLabel: 'D', MapsTo: 'D'},
-        { Label: 'In-Progress', Value: 'In-Progress', ShortLabel: 'P', MapsTo: 'P'},
-        { Label: 'To Verify in Dev', Value: 'To Verify in Dev', ShortLabel: 'V', MapsTo: 'P'},
-        { Label: 'Move to QA', Value: 'Move to QA', ShortLabel: 'Q', MapsTo: 'P'},
-        { Label: 'Move to UAT', Value: 'Move to UAT', ShortLabel: 'U', MapsTo: 'P'},
-        { Label: 'Completed', Value : 'Completed', ShortLabel: 'C', MapsTo: 'C'} 
+        { Label: 'Defined', Value: 'Defined', ShortLabel: 'D'},
+        { Label: 'In-Progress', Value: 'In-Progress', ShortLabel: 'P'},
+        { Label: 'To Verify in Dev', Value: 'To Verify in Dev', ShortLabel: 'V'},
+        { Label: 'Move to QA', Value: 'Move to QA', ShortLabel: 'Q'},
+        { Label: 'Move to UAT', Value: 'Move to UAT', ShortLabel: 'U'},
+        { Label: 'Completed', Value : 'Completed', ShortLabel: 'C'} 
     ]
 }
 
@@ -408,7 +408,7 @@ function initTaskboard() {
             }
             columnKey = this.columnKeyAccessor(columnValue);
 
-            
+
             if (!this.columnValuesAccessor && typeof columnIdentityMap[rowKey] == 'undefined') {
               columnValues.push(columnValue);
               columnIdentityMap[columnKey] = columnValue;
