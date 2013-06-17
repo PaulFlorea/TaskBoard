@@ -42,24 +42,6 @@ var SubState = {
     ]
 }
 
-/** Converts the subOption in the local JSON to an object type that can be used
-* @param: subOption The option in the SubState JSON to be converted
-* @return: the converted option that can be handled by RALLY's libraries.
-*/
-function convertState (subOption) {
-    if (subOption.MapsTo == 'P'){
-        return SubState.options[1];
-    }
-    return subOption;
-}
-
-function convertByVal (value) {
-    if (value != 'In-Progress' && value != 'Defined' && value != 'Completed'){
-        return SubState.options[1].Value;
-    }
-    return value;
-}
-
 function isCustomVal (value) {
     return (value != 'In-Progress' && value != 'Defined' && value != 'Completed');
 }
@@ -112,6 +94,7 @@ function initTaskboard() {
 
             "users"             : "/users?fetch=displayname,loginname,emailaddress,objectid" + paging,
 
+            //Added custom fields in the tasks and stories objects
             "tasks"             : "/tasks?fetch=taskindex,name,objectid,formattedid,owner,blocked,estimate,todo,actuals,state,collectionscustomstate,workproduct&query=(Iteration = ${iteration})" + scoping + paging,
 
             "stories"           : "/hierarchicalrequirement?fetch=rank,blocked,formattedid,name,objectid,owner,project,schedulestate,collectionsschedulestates,taskestimatetotal,taskremainingtotal,taskactualtotal,tasks&order=Rank&query=(Iteration = ${iteration})" + scoping + paging,
@@ -209,35 +192,15 @@ function initTaskboard() {
             html.push('<div class="' + divClass.join(' ') + '" id="' + divId + '">');
 
             state = new RALLY.toolkit.renderer.StateRenderer({
-                schema: schema.State, //SubState,
-                state: value.ScheduleState,//CollectionsScheduleStates,
+                schema: schema.State,
+                state: value.ScheduleState,
                 blocked: value.Blocked
             });
-
-            /*var rendererConfig = {
-                findSelectedIndex: function(selected) {
-                    if (Lang.isValue(selected)) {
-                        for (var i = 0, len = this.states.length; i < len; i++) {
-                            if (this.states[i].Value == selected) {
-                                if (selected == 'In-Progress'){
-                                    for (var j = i, len = this.states.length; i < len; i++) {
-
-                                    }
-                                }
-                                return i;
-                            }
-                        }
-                    }
-                    return -1;
-                },
-            }*/
-
-
 
             html.push('<div class="state">' + state.display(false, value.ScheduleState == 'Accepted') + '</div>');
 
             html.push('<div class="id">' + value.FormattedID + '</div>');
-            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(value.Name, 100) + value.ScheduleState + '</div>');
+            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(value.Name, 100) + '</div>');
             html.push('<div class="' + ownerClass.join(' ') + '">' + owner + '</div>');
 
             html.push(renderTimeCell((schema.TaskEstimateTotal) ? schema.TaskEstimateTotal.DisplayName : 'Est', value.TaskEstimateTotal, timeClass.join(' ')));
@@ -322,7 +285,7 @@ function initTaskboard() {
 
             html.push('<div style="' + contentStyle + '">');
             html.push('<div class="id">' + item.FormattedID + '</div>');
-            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(item.Name) /*+ item.CollectionsCustomState*/ + '</div>');
+            html.push('<div class="name">' + RALLY.toolkit.niceSubstring(item.Name) + '</div>');
             html.push('<div class="' + ownerClass.join(' ') + '">' + owner + '</div>');
 
             html.push('<div class="time">');
@@ -377,7 +340,7 @@ function initTaskboard() {
             }
         },
 
-        //Modified to handle the displaying of extra columns
+        //Modified to handle the placement of the cell in custom columns///////////////////////////
          refreshItem: function(item) {
           var i, j, rowKey, rowCount, columnKey, columnCount, cell, cells;
 
@@ -388,6 +351,7 @@ function initTaskboard() {
 
               for (j = 0, columnCount = this.columnHeaderValues.length; j < columnCount; j++) {
 
+                //Custom check here
                 if(item.CollectionsCustomState != null && item.CollectionsCustomState != 'default'){
                     columnValue = item.CollectionsCustomState;
                 }
@@ -395,6 +359,7 @@ function initTaskboard() {
                     columnValue = this.columnAttribute ? item[this.columnAttribute] : 0;
                 }
                 columnKey = this.columnKeyAccessor(columnValue);
+
 
                 if (columnKey == this.columnKeyAccessor(this.columnHeaderValues[j])) {
 
@@ -413,7 +378,8 @@ function initTaskboard() {
             }
           }
         },
-        //Modified to handle the displaying of extra columns
+
+        //Modified to handle the placement of the cell in custom columns///////////////////////////
         createGridData: function(model) {
           var items = this.itemsAccessor ? this.itemsAccessor(model) : model;
           var item, rowValue, rowKey, rowIdentityMap = {},
@@ -433,6 +399,7 @@ function initTaskboard() {
               rowIdentityMap[rowKey] = rowValue;
             }
 
+            //Custom check here
             if(item.CollectionsCustomState != null && item.CollectionsCustomState != 'default'){
                 columnValue = item.CollectionsCustomState;
             }
@@ -440,6 +407,8 @@ function initTaskboard() {
                 columnValue = this.columnAttribute ? item[this.columnAttribute] : 0;
             }
             columnKey = this.columnKeyAccessor(columnValue);
+
+            
             if (!this.columnValuesAccessor && typeof columnIdentityMap[rowKey] == 'undefined') {
               columnValues.push(columnValue);
               columnIdentityMap[columnKey] = columnValue;
