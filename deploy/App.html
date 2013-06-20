@@ -169,7 +169,8 @@ function initTaskboard() {
                     ownerClass = ['owner'],
                     divId = 'rally-workprod-' + value.ObjectID,
                     divClass = ['rally-workprod'],
-                    timeClass = ['rally-time'];
+                    timeClass = ['rally-time'],
+                    addIconId = 'add-' + Dom.generateId();
 
             // owner could be an object literal, or a string (if the user has been deleted in the app)
             if (!value.Owner) {
@@ -197,12 +198,18 @@ function initTaskboard() {
                 blocked: value.Blocked
             });
 
+            html.push('<div class="actions">');
+            html.push('<img id="' + addIconId + '" src="' + RALLY.toolkit.Connection.getServerURL() + '/images/icon_pencil.gif" alt="Add" />');
+            html.push('</div>');
+
+            html.push('<div class="info">');
             html.push('<div class="state">' + state.display(false, value.ScheduleState == 'Accepted') + '</div>');
 
             html.push('<div class="id">' + value.FormattedID + '</div>');
             html.push('<div class="name">' + RALLY.toolkit.niceSubstring(value.Name, 100) + '</div>');
             html.push('<div class="' + ownerClass.join(' ') + '">' + owner + '</div>');
 
+            
             html.push(renderTimeCell((schema.TaskEstimateTotal) ? schema.TaskEstimateTotal.DisplayName : 'Est', value.TaskEstimateTotal, timeClass.join(' ')));
             html.push(renderTimeCell((schema.TaskRemainingTotal) ? schema.TaskRemainingTotal.DisplayName : 'To Do', value.TaskRemainingTotal, timeClass.join(' ')));
             if (showActuals) {
@@ -211,8 +218,14 @@ function initTaskboard() {
 
             html.push('<div class="clear"></div>');
             html.push('</div>');
+            html.push('</div>');
 
             container.innerHTML = html.join('');
+
+            Event.purgeElement(addIconId);
+            Event.addListener(addIconId, 'click', function(e) {
+                gridController.showAdder(value, schema);
+            });
         },
 
         // configure cells
@@ -601,6 +614,36 @@ function initTaskboard() {
 
         },
 
+        //TODO After Touchpoint
+        showAdder: function(value, schema) {
+
+            var adderConfig = {
+                props: ['Name', 'Attachments', 'Owner', 'State', 'Estimate', 'ToDo', 'Owner',
+                 'Blocked', 'Blocked Reason', 'Notes'],
+                propertyKeyAccessors: {
+                    Owner: function(prop) {
+                        return prop != null ? prop.LoginName : null;
+                    }
+                },
+                propertyValueAccessors: {
+                    Owner: function(prop) {
+                        return prop != null ? prop._refObjectName : null;
+                    }
+                },
+                titleAccessor: function(obj) {
+                    return obj.FormattedID + '<br/>' + obj.Name;
+                },
+                onErrorCallback: function() {
+                    gridController.display();
+                },
+                onSaveCallback: function(changes) {
+                    gridController.saveChanges(value, changes, 'adder');
+                }
+            };
+            this.editor.display(value, schema, adderConfig);
+
+        },
+
         getParentRow: function(el) {
             while (el && el.tagName && el.tagName.toUpperCase() != 'TR') {
                 el = el.parentNode;
@@ -723,7 +766,10 @@ function initTaskboard() {
 
                         if (source == 'editor') {
                             that.editor.displayError(html.join(''), isConcurrencyError);
-                        } else {
+                        } 
+                        else if (source == 'adder'){
+                            that.editor.displayError(html.join('Cannot add task.'), isConcurrencyError);
+                        }else {
                             RALLY.toolkit.showWarning('The task you have drag-n-dropped has been modified by another user.<br/>Refreshing task board state.');
                             that.display();
                         }
@@ -965,6 +1011,19 @@ YAHOO.util.Event.addListener(window, 'load', initTaskboard);
 
     .rally-grid-column-header {
         padding: .2em;
+    }
+
+    .rally-grid-row-header .actions {
+        float: right;
+        position: relative;
+        top: 0.0em;
+        right: 0.0em;
+    }
+
+    .rally-grid-row-header .actions img {
+        display: block;
+        margin-bottom: .4em;
+        cursor: pointer;
     }
 
         /** Custom styles for this implementation **/
